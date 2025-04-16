@@ -14,7 +14,7 @@ app.use(express.json());
 app.get('/api/articles/:name', (req, res) => {
     const { name } = req.params;
 
-    const uri = '';
+    const uri = 'mongodb://127.0.0.1:27017';
 
     const client = new MongoClient(uri, {
         serverApi: {
@@ -22,9 +22,17 @@ app.get('/api/articles/:name', (req, res) => {
             strict: true,
             deprecationErrors: true,
         }
-    })
+    });
+    
+    await client.connect();
 
-})
+    const db = client.db('full-stack-react-db');
+
+    const article = await db.collection('articles').findOne({ name });
+
+    res.json(article);
+
+});
 
 app.post('/api/articles/:name/upvote', (req, res) =>{
     const article = articleInfo.find(a => a.name == req.params.name);
