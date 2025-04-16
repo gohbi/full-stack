@@ -11,7 +11,7 @@ const app = express();
 
 app.use(express.json());
 
-app.get('/api/articles/:name', (req, res) => {
+app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
 
     const uri = 'mongodb://127.0.0.1:27017';
