@@ -14,7 +14,7 @@ app.use(express.json());
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
 
-    const uri = 'mongodb://127.0.0.1:27017';
+    const uri = 'mongodb://127.0.0.1';
 
     const client = new MongoClient(uri, {
         serverApi: {
