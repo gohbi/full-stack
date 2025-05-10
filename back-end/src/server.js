@@ -1,6 +1,23 @@
 import express, { request } from 'express';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
+
+// ---- start of code to fix mongo errors
+
+
+if (!process.env.MONGODB_URI) {
+    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+}
+
+
+
+
+
+// ----- end of code for fixes
+
+
+
+
 const articleInfo = [
     {name: 'learn-flask', upvotes: 0, comments: []},
     {name: 'learn-node', upvotes: 0, comments: []},
@@ -13,8 +30,9 @@ app.use(express.json());
 
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
-
-    const uri = 'mongodb://127.0.0.1';
+// from mongodb sampe code
+    const { MongoClient, ServerApiVersion } = require('mongodb');
+    const uri = 'mongodb+srv://soc1muskiness052:EvIipI9fOBDY06rY@cluster0.nrrvvh4.mongodb.net/full-stack-react-db?retryWrites=true&w=majority';
 
     const client = new MongoClient(uri, {
         serverApi: {
@@ -24,6 +42,7 @@ app.get('/api/articles/:name', async (req, res) => {
         }
     });
     
+    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
     const db = client.db('full-stack-react-db');
