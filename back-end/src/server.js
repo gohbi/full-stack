@@ -1,19 +1,31 @@
-import express, { request } from 'express';
+import express from 'express';
 import { MongoClient, ServerApiVersion } from 'mongodb';
+import fs from 'fs';
+import path from 'path';
 
 
-// ---- start of code to fix mongo errors
+// Load environment variables from config.env
+const envPath = path.resolve('./src/config.env');
+if (fs.existsSync(envPath)) {
+    const env = fs.readFileSync(envPath, 'utf-8');
+    env.split('\n').forEach(line => {
+        const match = line.match(/^([A-Z_]+)=(.*)$/);
+        if (match) {
+            let [, key, value] = match;
+            value = value.replace(/^"|"$/g, '');
+            process.env[key] = value;
+        }
+    });
+}
 
+if (!process.env.MONGODB_URI && process.env.ATLAS_URI) {
+    process.env.MONGODB_URI = process.env.ATLAS_URI;
+}
 
 if (!process.env.MONGODB_URI) {
     throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
 }
 
-
-
-
-
-// ----- end of code for fixes
 
 
 
@@ -30,10 +42,8 @@ app.use(express.json());
 
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
-// from mongodb sampe code
-    const { MongoClient, ServerApiVersion } = require('mongodb');
-    const uri = 'mongodb+srv://soc1muskiness052:EvIipI9fOBDY06rY@cluster0.nrrvvh4.mongodb.net/full-stack-react-db?retryWrites=true&w=majority';
-
+    // Use environment variable for MongoDB URI
+    const uri = process.env.MONGODB_URI;
     const client = new MongoClient(uri, {
         serverApi: {
             version: ServerApiVersion.v1,
@@ -41,12 +51,8 @@ app.get('/api/articles/:name', async (req, res) => {
             deprecationErrors: true,
         }
     });
-    
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-
     const db = client.db('full-stack-react-db');
-
     const article = await db.collection('articles').findOne({ name });
 
     res.json(article);
