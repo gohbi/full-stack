@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import getDB, { connectDB } from './db/connection.js';
+import getD from './db/connection.js';
 
 
 // Load environment variables from config.env
@@ -23,11 +23,8 @@ if (!process.env.MONGODB_URI && process.env.ATLAS_URI) {
 }
 
 if (!process.env.MONGODB_URI) {
-    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+    throw Error('Invalid/Missing environment variable: "MONGODB_URI"')
 }
-
-
-
 
 
 const articleInfo = [
@@ -86,11 +83,11 @@ app.post('/hello', function(req, res){
 });
 */
 
-// Only start the server after DB is connected
-connectDB().then(() => {
+// Start the server only after DB is connected
+async function startServer() {
+    await connectDB();
     app.listen(8000, function(){
         console.log('Server is listening on port 8000');
     });
-}).catch((err) => {
-    console.error('Failed to connect to database. Server not started.', err);
-});
+
+}
