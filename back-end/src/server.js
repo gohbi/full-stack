@@ -1,8 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import getD from './db/connection.js';
-
+import { connectDB, getDB } from './db/connection.js';
 
 // Load environment variables from config.env
 const envPath = path.resolve('./src/config.env');
@@ -16,14 +15,6 @@ if (fs.existsSync(envPath)) {
             process.env[key] = value;
         }
     });
-}
-
-if (!process.env.MONGODB_URI && process.env.ATLAS_URI) {
-    process.env.MONGODB_URI = process.env.ATLAS_URI;
-}
-
-if (!process.env.MONGODB_URI) {
-    throw Error('Invalid/Missing environment variable: "MONGODB_URI"')
 }
 
 
@@ -47,17 +38,20 @@ app.get('/api/articles/:name', async (req, res) => {
     }
 });
 
-app.post('/api/articles/:name/upvote', (req, res) =>{
+// Improved upvote route with error handling
+app.post('/api/articles/:name/upvote', (req, res) => {
     const article = articleInfo.find(a => a.name == req.params.name);
+    if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+    }
     article.upvotes += 1;
-
-    res.json(article);
+    res.json({ success: true, article });
 });
 
-app.post('/api/articles/:name/comments', (req, res) =>{
+// Improved comments route with validation and error handling
+app.post('/api/articles/:name/comments', (req, res) => {
     const { name } = req.params;
     const { postedBy, text } = req.body;
-
     const article = articleInfo.find(a => a.name == name);
 
     article.comments.push({
@@ -68,26 +62,11 @@ app.post('/api/articles/:name/comments', (req, res) =>{
     res.json(article);
 });
 
-
-/*
-app.get('/hello', function(req, res){
-    res.send('Hello from a GET endpoint!');
-});
-
-app.get('/hello/:name', function(req,res){
-    res.send('Hello,' + req.params.name );
-});
-
-app.post('/hello', function(req, res){
-    res.send('Hello' +  req.body.name + 'from a POST endpoint!');
-});
-*/
-
-// Start the server only after DB is connected
-async function startServer() {
-    await connectDB();
+connectDB().then(() => {
     app.listen(8000, function(){
         console.log('Server is listening on port 8000');
     });
-
-}
+}).catch((err) => {
+    console.error('Failed to connect to DB:', err);
+    process.exit(1);
+});

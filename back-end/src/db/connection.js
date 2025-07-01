@@ -19,7 +19,7 @@ export async function connectDB() {
     }
 }
 
-default function getDB() {
+export function getDB() {
     if (!db) throw new Error('Database not connected!');
     return db;
 }
