@@ -1,7 +1,7 @@
 import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
+import getDB from './db/connection.js';
 
 
 // Load environment variables from config.env
@@ -42,21 +42,13 @@ app.use(express.json());
 
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
-    // Use environment variable for MongoDB URI
-    const uri = process.env.MONGODB_URI;
-    const client = new MongoClient(uri, {
-        serverApi: {
-            version: ServerApiVersion.v1,
-            strict: true,
-            deprecationErrors: true,
-        }
-    });
-    await client.connect();
-    const db = client.db('full-stack-react-db');
-    const article = await db.collection('articles').findOne({ name });
-
-    res.json(article);
-
+    try {
+        const db = getDB();
+        const article = await db.collection('articles').findOne({ name });
+        res.json(article);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/articles/:name/upvote', (req, res) =>{
