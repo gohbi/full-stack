@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { connectDB, getDB } from './db/connection.js';
+import { connectDB, getDB } from './db/connection.js'; // Import database connection functions
 
 // Load environment variables from config.env
 const envPath = path.resolve('./src/config.env');
@@ -19,10 +19,10 @@ if (fs.existsSync(envPath)) {
 
 
 const articleInfo = [
-    {name: 'learn-flask', upvotes: 0, comments: []},
-    {name: 'learn-node', upvotes: 0, comments: []},
-    {name: 'learn-react', upvotes: 0, comments: []},
-]
+    { name: 'learn-flask', upvotes: 0, comments: [] },
+    { name: 'learn-node', upvotes: 0, comments: [] },
+    { name: 'learn-react', upvotes: 0, comments: [] },
+];
 
 const app = express();
 app.use(express.json());
@@ -62,11 +62,14 @@ app.post('/api/articles/:name/comments', (req, res) => {
     res.json(article);
 });
 
-connectDB().then(() => {
-    app.listen(8000, function(){
-        console.log('Server is listening on port 8000');
+connectDB()
+    .then(() => {
+        app.listen(process.env.PORT || 8000, () => {
+            console.log(`Server is listening on port ${process.env.PORT || 8000}`);
+        });
+    })
+    .catch((err) => {
+        console.error('Failed to connect to MongoDB:', err.message);
+        process.exit(1); // Exit the process if the database connection fails
     });
-}).catch((err) => {
-    console.error('Failed to connect to DB:', err);
-    process.exit(1);
-});
+
