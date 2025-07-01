@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import getDB from './db/connection.js';
+import getDB, { connectDB } from './db/connection.js';
 
 
 // Load environment variables from config.env
@@ -37,14 +37,13 @@ const articleInfo = [
 ]
 
 const app = express();
-
 app.use(express.json());
 
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
     try {
         const db = getDB();
-        const articles = await db.collection('articles').findOne({ name });
+        const article = await db.collection('articles').findOne({ name });
         res.json(article);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -86,6 +85,12 @@ app.post('/hello', function(req, res){
     res.send('Hello' +  req.body.name + 'from a POST endpoint!');
 });
 */
-app.listen(8000, function(){
-    console.log('Server is listening on port 8000');
+
+// Only start the server after DB is connected
+connectDB().then(() => {
+    app.listen(8000, function(){
+        console.log('Server is listening on port 8000');
+    });
+}).catch((err) => {
+    console.error('Failed to connect to database. Server not started.', err);
 });

@@ -12,7 +12,7 @@ const client = new MongoClient(uri, {
 
 let db;
 
-async function connectDB() {
+export async function connectDB() {
     try {
         await client.connect();
         await client.db('full-stack-react-db').command({ ping: 1 });
@@ -21,11 +21,9 @@ async function connectDB() {
     } catch (err) {
         console.error('MongoDB connection error:', err);
         db = null;
+        throw err;
     }
 }
-
-// Immediately connect when this module is loaded
-connectDB();
 
 export default function getDB() {
     if (!db) throw new Error('Database not connected!');
