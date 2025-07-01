@@ -15,9 +15,9 @@ let db;
 async function connectDB() {
     try {
         await client.connect();
-        await client.db('admin').command({ ping: 1 });
+        await client.db('full-stack-react-db').command({ ping: 1 });
         console.log('Pinged your deployment. You successfully connected to MongoDB!');
-        db = client.db('employees');
+        db = client.db('full-stack-react-db'); // Use your database name here
     } catch (err) {
         console.error('MongoDB connection error:', err);
         db = null;
