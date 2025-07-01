@@ -12,7 +12,7 @@ const client = new MongoClient(uri, {
 
 let db;
 
-async function connectDB() {
+export async function connectDB() {
     try {
         await client.connect();
         await client.db('full-stack-react-db').command({ ping: 1 });
