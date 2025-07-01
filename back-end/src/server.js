@@ -44,7 +44,7 @@ app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
     try {
         const db = getDB();
-        const article = await db.collection('articles').findOne({ name });
+        const articles = await db.collection('articles').findOne({ name });
         res.json(article);
     } catch (err) {
         res.status(500).json({ error: err.message });
