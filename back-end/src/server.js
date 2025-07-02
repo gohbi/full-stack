@@ -16,13 +16,7 @@ if (fs.existsSync(envPath)) {
         }
     });
 }
-
-
-const articleInfo = [
-    { name: 'learn-flask', upvotes: 0, comments: [] },
-    { name: 'learn-node', upvotes: 0, comments: [] },
-    { name: 'learn-react', upvotes: 0, comments: [] },
-];
+// Import article data
 
 const app = express();
 app.use(express.json());
@@ -39,27 +33,44 @@ app.get('/api/articles/:name', async (req, res) => {
 });
 
 // Improved upvote route with error handling
-app.post('/api/articles/:name/upvote', (req, res) => {
-    const article = articleInfo.find(a => a.name == req.params.name);
-    if (!article) {
-        return res.status(404).json({ error: 'Article not found' });
+app.post('/api/articles/:name/upvote', async (req, res) => {
+    const { name } = req.params;
+    try {
+        const db = getDB();
+        const article = await db.collection('articles').findOne({ name });
+        if (!article) {
+            return res.status(404).json({ error: 'Article not found' });
+        }
+        await db.collection('articles').updateOne(
+            { name },
+            { $inc: { upvotes: 1 } }
+        );
+        const updatedArticle = await db.collection('articles').findOne({ name });
+        res.json({ success: true, article: updatedArticle });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    article.upvotes += 1;
-    res.json({ success: true, article });
 });
 
 // Improved comments route with validation and error handling
-app.post('/api/articles/:name/comments', (req, res) => {
+app.post('/api/articles/:name/comments', async (req, res) => {
     const { name } = req.params;
     const { postedBy, text } = req.body;
-    const article = articleInfo.find(a => a.name == name);
-
-    article.comments.push({
-        postedBy,
-        text,
-    });
-
-    res.json(article);
+    try {
+        const db = getDB();
+        const article = await db.collection('articles').findOne({ name });
+        if (!article) {
+            return res.status(404).json({ error: 'Article not found' });
+        }
+        await db.collection('articles').updateOne(
+            { name },
+            { $push: { comments: { postedBy, text } } }
+        );
+        const updatedArticle = await db.collection('articles').findOne({ name });
+        res.json(updatedArticle);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 connectDB()

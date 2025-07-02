@@ -4,11 +4,12 @@ import{
 } from 'react-router-dom'
 import './App.css'
 import HomePage from './pages/HomePage'
-import ArticlePage from './pages/ArticlePage';
+import ArticlePage, { loader as articleLoader } from './pages/ArticlePage';
 import ArticlesList from './pages/ArticlesListPage';
 import AboutPage from './pages/AboutPage';
 import Layout from './Layout';
 import NotFoundPage from './pages/NotFoundPage';
+import Axios from 'axios';
 
 const routes = [{
   path: '/',
@@ -22,7 +23,8 @@ const routes = [{
     element: <AboutPage />
   }, {
     path: '/articles/:name',
-    element: <ArticlePage />
+    element: <ArticlePage />,
+    loader: articleLoader,
   }, {
     path: '/articles',
     element: <ArticlesList />
