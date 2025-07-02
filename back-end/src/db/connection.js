@@ -1,26 +1,28 @@
-import { MongoClien, ServerApiVersion } from 'mongodb';
-const uri = process.env.ATLAS_URI || "";
+import mongodb from 'mongodb';
+const { MongoClient } = mongodb;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
-});
+const uri = process.env.MONGODB_URI || process.env.ATLAS_URI || 'mongodb://127.0.0.1:27017';
 
-async function run() {
+// Create a MongoClient without serverApi for compatibility with older MongoDB servers
+const client = new MongoClient(uri);
+
+let db;
+
+export async function connectDB() {
+    console.log('Connecting to MongoDB at URI:', uri);
     try {
-        // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } catch(err){
-        console.error(err);
+        console.log('MongoDB connection established successfully.');
+        db = client.db('full-stack-react-db'); // Assign the database instance
+        console.log('Database selected:', db.databaseName);
+    } catch (err) {
+        console.error('Failed to connect to MongoDB:', err.message);
+        db = null;
+        throw err;
     }
 }
-let db = client.db("employees");
 
-export default db;
+export function getDB() {
+    if (!db) throw new Error('Database not connected!');
+    return db;
+}

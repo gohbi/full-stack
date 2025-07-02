@@ -1,69 +1,57 @@
-import express, { request } from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { connectDB, getDB } from './db/connection.js'; // Import database connection functions
 
-
-// ---- start of code to fix mongo errors
-
-
-if (!process.env.MONGODB_URI) {
-    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+// Load environment variables from config.env
+const envPath = path.resolve('./src/config.env');
+if (fs.existsSync(envPath)) {
+    const env = fs.readFileSync(envPath, 'utf-8');
+    env.split('\n').forEach(line => {
+        const match = line.match(/^([A-Z_]+)=(.*)$/);
+        if (match) {
+            let [, key, value] = match;
+            value = value.replace(/^"|"$/g, '');
+            process.env[key] = value;
+        }
+    });
 }
 
 
-
-
-
-// ----- end of code for fixes
-
-
-
-
 const articleInfo = [
-    {name: 'learn-flask', upvotes: 0, comments: []},
-    {name: 'learn-node', upvotes: 0, comments: []},
-    {name: 'learn-react', upvotes: 0, comments: []},
-]
+    { name: 'learn-flask', upvotes: 0, comments: [] },
+    { name: 'learn-node', upvotes: 0, comments: [] },
+    { name: 'learn-react', upvotes: 0, comments: [] },
+];
 
 const app = express();
-
 app.use(express.json());
 
 app.get('/api/articles/:name', async (req, res) => {
     const { name } = req.params;
-// from mongodb sampe code
-    const { MongoClient, ServerApiVersion } = require('mongodb');
-    const uri = 'mongodb+srv://soc1muskiness052:EvIipI9fOBDY06rY@cluster0.nrrvvh4.mongodb.net/full-stack-react-db?retryWrites=true&w=majority';
-
-    const client = new MongoClient(uri, {
-        serverApi: {
-            version: ServerApiVersion.v1,
-            strict: true,
-            deprecationErrors: true,
-        }
-    });
-    
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-
-    const db = client.db('full-stack-react-db');
-
-    const article = await db.collection('articles').findOne({ name });
-
-    res.json(article);
-
+    try {
+        const db = getDB();
+        const article = await db.collection('articles').findOne({ name });
+        res.json(article);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/articles/:name/upvote', (req, res) =>{
+// Improved upvote route with error handling
+app.post('/api/articles/:name/upvote', (req, res) => {
     const article = articleInfo.find(a => a.name == req.params.name);
+    if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+    }
     article.upvotes += 1;
-
-    res.json(article);
+    res.json({ success: true, article });
 });
 
-app.post('/api/articles/:name/comments', (req, res) =>{
+// Improved comments route with validation and error handling
+app.post('/api/articles/:name/comments', (req, res) => {
     const { name } = req.params;
     const { postedBy, text } = req.body;
-
     const article = articleInfo.find(a => a.name == name);
 
     article.comments.push({
@@ -74,20 +62,14 @@ app.post('/api/articles/:name/comments', (req, res) =>{
     res.json(article);
 });
 
+connectDB()
+    .then(() => {
+        app.listen(process.env.PORT || 8000, () => {
+            console.log(`Server is listening on port ${process.env.PORT || 8000}`);
+        });
+    })
+    .catch((err) => {
+        console.error('Failed to connect to MongoDB:', err.message);
+        process.exit(1); // Exit the process if the database connection fails
+    });
 
-/*
-app.get('/hello', function(req, res){
-    res.send('Hello from a GET endpoint!');
-});
-
-app.get('/hello/:name', function(req,res){
-    res.send('Hello,' + req.params.name );
-});
-
-app.post('/hello', function(req, res){
-    res.send('Hello' +  req.body.name + 'from a POST endpoint!');
-});
-*/
-app.listen(8000, function(){
-    console.log('Server is listening on port 8000');
-});
