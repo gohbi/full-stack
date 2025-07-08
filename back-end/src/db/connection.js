@@ -1,10 +1,11 @@
 import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
+// back-end/src/db/connection.js
 
 const uri = process.env.MONGODB_URI || process.env.ATLAS_URI || 'mongodb://127.0.0.1:27017';
 
 // Create a MongoClient without serverApi for compatibility with older MongoDB servers
-const client = new MongoClient(uri);
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let db;
 

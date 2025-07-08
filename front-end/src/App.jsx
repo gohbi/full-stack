@@ -9,7 +9,7 @@ import ArticlesList from './pages/ArticlesListPage';
 import AboutPage from './pages/AboutPage';
 import Layout from './Layout';
 import NotFoundPage from './pages/NotFoundPage';
-import Axios from 'axios';
+import axios from 'axios';
 
 const routes = [{
   path: '/',
@@ -26,11 +26,15 @@ const routes = [{
     element: <ArticlePage />,
     loader: articleLoader,
   }, {
-    path: '/articles',
-    element: <ArticlesList />
-  }] 
-
-}]
+    path: '/articles/:name', // -> /articles/learn-react
+    element: <ArticlePage />,
+    loader: async function() {
+      const response = await axios.get('/api/articles/learn-node');
+      const { upvotes, comments } = response.data;
+      return { upvotes, comments };
+    }
+  }]
+}];
 
 
 const router = createBrowserRouter(routes);
