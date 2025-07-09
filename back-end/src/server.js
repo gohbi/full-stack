@@ -26,7 +26,10 @@ app.get('/api/articles/:name', async (req, res) => {
     try {
         const db = getDB();
         const article = await db.collection('articles').findOne({ name });
-        res.json(article);
+        if (!article) {
+            return res.status(404).json({ error: 'Article not found' });
+        }
+        res.json(article); // Ensure the article includes all required fields
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
